@@ -25,7 +25,7 @@
           >Password</label
         >
         <input
-          type="text"
+          type="password"
           required
           class="p-2 text-grey-500 focus:outline-none"
           id="password"

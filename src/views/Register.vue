@@ -6,7 +6,10 @@
     </div>
 
     <!-- Registration -->
-    <form class="p-8 flex flex-col bg-light-grey round-md shadow-lg">
+    <form
+      @submit.prevent="register"
+      class="p-8 flex flex-col bg-light-grey round-md shadow-lg"
+    >
       <h1 class="text-3xl text-at-light-green mb-4">Register</h1>
       <div class="flex flex-col mb-2">
         <label for="email" class="mb-1 text-sm text-at-light-green"
@@ -25,7 +28,7 @@
           >Password</label
         >
         <input
-          type="text"
+          type="password"
           required
           class="p-2 text-grey-500 focus:outline-none"
           id="password"
@@ -37,7 +40,7 @@
           >Confirm Password</label
         >
         <input
-          type="text"
+          type="password"
           required
           class="p-2 text-grey-500 focus:outline-none"
           id="confirmPassword"
@@ -60,17 +63,44 @@
 
 <script>
 import { ref } from "vue";
+import { supabase } from "../supabase/init.js";
+import { useRouter } from "vue-router";
+
 export default {
   name: "register",
   setup() {
     // Create data / vars
+    const router = useRouter();
     const email = ref(null);
     const password = ref(null);
     const confirmPassword = ref(null);
     const errorMsg = ref(null);
 
     // Register function
-    return { email, password, confirmPassword, errorMsg };
+    const register = async () => {
+      if (password.value === confirmPassword.value) {
+        try {
+          const { error } = await supabase.auth.signUp({
+            email: email.value,
+            password: password.value
+          });
+          if (error) throw error;
+          router.push({ name: "Login" });
+        } catch (error) {
+          errorMsg.value = error.message;
+          setTimeout(() => {
+            errorMsg.value = null;
+          }, 5000);
+        }
+        return;
+      }
+      errorMsg.value = "Error: Passwords do not match";
+      setTimeout(() => {
+        errorMsg.value = null;
+      }, 5000);
+    };
+
+    return { email, password, confirmPassword, errorMsg, register };
   }
 };
 </script>
