@@ -38,6 +38,7 @@
           >Workout Type</label
         >
         <select
+          @change="workoutChange"
           class="p-2 text-gray-500 focus:outline-none"
           required
           id="workout-type"
@@ -101,10 +102,12 @@
             />
           </div>
           <img
+            @click="deleteExercise(item.id)"
             src="@/assets/images/trash-light-green.png"
             class="h-4 w-auto absolute -left-5 cursor-pointer"
           />
           <button
+            @click="addExercise"
             type="button"
             class="mt-6 py-2 px-6 rounded-sm self-start text-sm text-white bg-at-light-green duration-200 border-solid border-2 border-transparent hover:border-at-light-green hover:bg-white hover:text-at-light-green"
           >
@@ -168,10 +171,12 @@
             />
           </div>
           <img
+            @click="deleteExercise(item.id)"
             src="@/assets/images/trash-light-green.png"
             class="h-4 w-auto absolute -left-5 cursor-pointer"
           />
           <button
+            @click="addExercise"
             type="button"
             class="mt-6 py-2 px-6 rounded-sm self-start text-sm text-white bg-at-light-green duration-200 border-solid border-2 border-transparent hover:border-at-light-green hover:bg-white hover:text-at-light-green"
           >
@@ -179,12 +184,19 @@
           </button>
         </div>
       </div>
+      <button
+        type="submit"
+        class="mt-6 py-2 px-6 rounded-sm self-start text-sm text-white bg-at-light-green duration-200 border-solid border-2 border-transparent hover:border-at-light-green hover:bg-white hover:text-at-light-green"
+      >
+        Record Workout
+      </button>
     </form>
   </div>
 </template>
 
 <script>
 import { ref } from "vue";
+import { uid } from "uid";
 
 export default {
   name: "create",
@@ -197,14 +209,60 @@ export default {
     const errorMsg = ref(null);
 
     // Add exercise
+    const addExercise = () => {
+      if (workoutType.value === "strength") {
+        exercises.value.push({
+          id: uid(),
+          exercise: "",
+          sets: "",
+          reps: "",
+          weight: ""
+        });
+        return;
+      }
+
+      exercises.value.push({
+        id: uid(),
+        cardioType: "",
+        distance: "",
+        duration: "",
+        pace: ""
+      });
+    };
 
     // Delete exercise
+    const deleteExercise = id => {
+      if (exercises.value.length > 1) {
+        exercises.value = exercises.value.filter(
+          exercise => exercise.id !== id
+        );
+        return;
+      }
+      errorMsg.value =
+        "Error: Cannot remove, need to at least have one exercise";
+      setTimeout(() => {
+        errorMsg.value = null;
+      }, 5000);
+    };
 
     // Listens for chaging of workout type input
+    const workoutChange = () => {
+      exercises.value = [];
+      addExercise();
+    };
 
     // Create workout
 
-    return { workoutName, workoutType, exercises, statusMsg, errorMsg };
+    return {
+      workoutName,
+      workoutType,
+      exercises,
+      statusMsg,
+      errorMsg,
+      addExercise,
+      workoutChange,
+      deleteExercise
+    };
   }
 };
 </script>
