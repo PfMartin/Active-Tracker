@@ -6,7 +6,7 @@
       class="mb-10 p-4 rounded-md shadow-md bg-light-grey"
     >
       <p class="text-at-light-green">
-        {{ statusMsg }}
+        {{ statusMsg || errorMsg }}
       </p>
       <p class="text-red-500"></p>
     </div>
@@ -137,6 +137,7 @@
             </div>
             <img
               v-if="edit"
+              @click="deleteExercise(item.id)"
               class="absolute h-4 w-auto -left-5 cursor-pointer"
               src="@/assets/images/trash-light-green.png"
               alt=""
@@ -144,6 +145,7 @@
           </div>
           <button
             v-if="edit"
+            @click="addExercise"
             type="button"
             class="mt-6 py-2 px-6 rounded-sm self-start text-sm text-white bg-at-light-green duration-200 border-solid border-2 border-transparent hover:border-at-light-green hover:bg-white hover:text-at-light-green"
           >
@@ -216,6 +218,7 @@
             </div>
             <img
               v-if="edit"
+              @click="deleteExercise(item.id)"
               class="absolute h-4 w-auto -left-5 cursor-pointer"
               src="@/assets/images/trash-light-green.png"
               alt=""
@@ -223,6 +226,7 @@
           </div>
           <button
             v-if="edit"
+            @click="addExercise"
             type="button"
             class="mt-6 py-2 px-6 rounded-sm self-start text-sm text-white bg-at-light-green duration-200 border-solid border-2 border-transparent hover:border-at-light-green hover:bg-white hover:text-at-light-green"
           >
@@ -234,7 +238,8 @@
       <!-- Update -->
       <button
         v-if="edit"
-        type="submit"
+        @click="update"
+        type="button"
         class="mt-10 py-2 px-6 rounded-sm self-start text-sm text-white bg-at-light-green duration-200 border-solid border-2 border-transparent hover:border-at-light-green hover:bg-white hover:text-at-light-green"
       >
         Update Workout
@@ -248,6 +253,7 @@ import { ref, computed } from "vue";
 import { supabase } from "../supabase/init";
 import { useRoute, useRouter } from "vue-router";
 import store from "../store/index";
+import { uid } from "uid";
 
 export default {
   name: "view-workout",
@@ -311,10 +317,68 @@ export default {
     };
 
     // Add exercise
+    const addExercise = () => {
+      console.log(data.value.exercises);
+      if (data.value.workoutType === "strength") {
+        data.value.exercises.push({
+          id: uid(),
+          exercise: "",
+          sets: "",
+          reps: "",
+          weight: ""
+        });
+        return;
+      }
+
+      data.value.exercises.push({
+        id: uid(),
+        cardioType: "",
+        distance: "",
+        duration: "",
+        pace: ""
+      });
+    };
 
     // Delete exercise
+    const deleteExercise = id => {
+      console.log(data.value.exercises);
+      console.log(id);
+      if (data.value.exercises.length > 1) {
+        data.value.exercises = data.value.exercises.filter(
+          exercise => exercise.id !== id
+        );
+        return;
+      }
+      errorMsg.value =
+        "Error: Cannot remove, need to at least have one exercise";
+      setTimeout(() => {
+        errorMsg.value = null;
+      }, 5000);
+    };
 
     // Update Workout
+    const update = async () => {
+      try {
+        const { error } = await supabase
+          .from("workouts")
+          .update({
+            workoutName: data.value.workoutName,
+            exercises: data.value.exercises
+          })
+          .eq("id", currentId);
+        if (error) throw error;
+        statusMsg.value = "Success: Workout Updated!";
+        edit.value = false;
+        setTimeout(() => {
+          statusMsg.value = null;
+        }, 5000);
+      } catch (error) {
+        errorMsg.value = `Error: ${error.message}`;
+        setTimeout(() => {
+          errorMsg.value = false;
+        }, 5000);
+      }
+    };
 
     return {
       data,
@@ -324,7 +388,10 @@ export default {
       edit,
       editMode,
       user,
-      deleteWorkout
+      deleteWorkout,
+      addExercise,
+      deleteExercise,
+      update
     };
   }
 };
